@@ -18,7 +18,7 @@ module Loggun
     )
 
     def initialize
-      @formatter = Loggun::Formatter
+      @formatter = Loggun::Formatter.new
       @precision = DEFAULTS[:precision]
       @pattern = DEFAULTS[:pattern]
     end
