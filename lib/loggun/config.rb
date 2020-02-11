@@ -6,17 +6,21 @@ module Loggun
   class Config
     include Singleton
 
-    attr_reader :timestamp_precision
+    DEFAULTS = {
+      pattern: '%{time} - %{pid} %{severity} %{type} %{tags_text}%{agent} %{message}',
+      precision: :milliseconds
+    }.freeze
+
     attr_accessor(
       :formatter,
-      :pattern
+      :pattern,
+      :precision
     )
 
     def initialize
       @formatter = Loggun::Formatter
-      @timestamp_precision = precision_to_number(:milliseconds)
-      @pattern =
-        '%{time} - %{pid} %{severity} %{type} %{tags_text}%{agent} %{message}'
+      @precision = DEFAULTS[:precision]
+      @pattern = DEFAULTS[:pattern]
     end
 
     class << self
@@ -26,14 +30,8 @@ module Loggun
       end
     end
 
-    def timestamp_precision=(precision)
-      @timestamp_precision = precision_to_number(precision)
-    end
-
-    private
-
-    def precision_to_number(value)
-      case value
+    def timestamp_precision
+      case precision
       when :sec, :seconds then 0
       when :millis, :milliseconds, :ms then 3
       when :micros, :microseconds, :us then 6

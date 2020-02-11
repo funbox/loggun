@@ -5,13 +5,12 @@ RSpec.describe Loggun::Config do
     end
 
     let!(:instance) { described_class.instance }
-    let!(:timestamp_precision) { %i[micros microseconds us].sample }
-    let!(:number_precision) { 6 }
+    let!(:precision) { %i[micros microseconds us].sample }
     let!(:pattern) { '%{time} %{message}' }
 
     subject do
       described_class.configure do |config|
-        config.timestamp_precision = timestamp_precision
+        config.precision = precision
         config.pattern = pattern
       end
     end
@@ -20,7 +19,7 @@ RSpec.describe Loggun::Config do
       it 'set configs' do
         subject
 
-        expect(instance.timestamp_precision).to eq(number_precision)
+        expect(instance.precision).to eq(precision)
         expect(instance.pattern).to eq(pattern)
       end
     end

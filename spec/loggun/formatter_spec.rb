@@ -14,7 +14,7 @@ RSpec.describe Loggun::Formatter do
 
       before do
         Loggun::Config.instance.pattern = '%{time} %{message}'
-        Loggun::Config.instance.timestamp_precision = :ms
+        Loggun::Config.instance.precision = :ms
       end
 
       it 'returns correct string' do
