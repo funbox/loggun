@@ -14,13 +14,17 @@ module Loggun
     attr_accessor(
       :formatter,
       :pattern,
-      :precision
+      :precision,
+      :modifiers,
+      :enable_rails
     )
 
     def initialize
       @formatter = Loggun::Formatter.new
       @precision = DEFAULTS[:precision]
       @pattern = DEFAULTS[:pattern]
+      @modifiers = Loggun::OrderedOptions.new
+      set_modifiers
     end
 
     class << self
@@ -38,6 +42,14 @@ module Loggun
       when :nanos, :nanoseconds, :ns then 9
       else
         3 # milliseconds
+      end
+    end
+
+    private
+
+    def set_modifiers
+      Loggun::Modifiers::MODIFIERS.each do |method|
+        modifiers.send(method, false)
       end
     end
   end
