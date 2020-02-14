@@ -1,5 +1,4 @@
 require 'singleton'
-require 'loggun/formatter'
 
 module Loggun
   ## Class for configurations
@@ -10,13 +9,13 @@ module Loggun
       pattern: '%{time} - %{pid} %{severity} %{type} %{tags_text}%{agent} %{message}',
       precision: :milliseconds
     }.freeze
+    MODIFIERS = %i[rails sidekiq].freeze
 
     attr_accessor(
       :formatter,
       :pattern,
       :precision,
-      :modifiers,
-      :enable_rails
+      :modifiers
     )
 
     def initialize
@@ -30,7 +29,20 @@ module Loggun
     class << self
       def configure(&block)
         block.call(instance)
+        check_modifiers
         instance
+      end
+
+      def check_modifiers
+        MODIFIERS.each do |modifier|
+          if instance.modifiers.public_send(modifier)
+            require_relative "modifiers/#{modifier}"
+          end
+        end
+      end
+
+      def setup_formatter(app)
+        app.logger.formatter = instance.formatter
       end
     end
 
@@ -48,8 +60,8 @@ module Loggun
     private
 
     def set_modifiers
-      Loggun::Modifiers::MODIFIERS.each do |method|
-        modifiers.send(method, false)
+      MODIFIERS.each do |modifier|
+        modifiers.send(modifier, false)
       end
     end
   end
