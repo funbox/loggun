@@ -9,7 +9,7 @@ module Loggun
       pattern: '%{time} - %{pid} %{severity} %{type} %{tags_text}%{agent} %{message}',
       precision: :milliseconds
     }.freeze
-    MODIFIERS = %i[rails sidekiq].freeze
+    MODIFIERS = %i[rails sidekiq clockwork].freeze
 
     attr_accessor(
       :formatter,
@@ -29,11 +29,11 @@ module Loggun
     class << self
       def configure(&block)
         block.call(instance)
-        check_modifiers
+        use_modifiers
         instance
       end
 
-      def check_modifiers
+      def use_modifiers
         MODIFIERS.each do |modifier|
           if instance.modifiers.public_send(modifier)
             require_relative "modifiers/#{modifier}"
