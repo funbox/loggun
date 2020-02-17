@@ -11,6 +11,7 @@ module Loggun
       data[:message] = message.to_s.tr("\r\n", ' ').strip
       data[:severity] = severity&.present? ? severity.to_s : 'INFO'
       data[:tags_text] = tags_text
+      data[:type] = Loggun.type
 
       format(config.pattern + "\n", data)
     end

@@ -7,15 +7,17 @@ module Loggun
 
     DEFAULTS = {
       pattern: '%{time} - %{pid} %{severity} %{type} %{tags_text}%{agent} %{message}',
-      precision: :milliseconds
+      precision: :milliseconds,
+      controllers: %w[ApplicationController]
     }.freeze
-    MODIFIERS = %i[rails sidekiq clockwork].freeze
+    MODIFIERS = %i[rails sidekiq clockwork incoming_http].freeze
 
     attr_accessor(
       :formatter,
       :pattern,
       :precision,
-      :modifiers
+      :modifiers,
+      :controllers
     )
 
     def initialize
@@ -23,6 +25,7 @@ module Loggun
       @precision = DEFAULTS[:precision]
       @pattern = DEFAULTS[:pattern]
       @modifiers = Loggun::OrderedOptions.new
+      @controllers = DEFAULTS[:controllers]
       set_modifiers
     end
 
@@ -42,7 +45,8 @@ module Loggun
       end
 
       def setup_formatter(app)
-        app.logger.formatter = instance.formatter
+        Loggun.application = app
+        Loggun.application.logger.formatter = instance.formatter
       end
     end
 
