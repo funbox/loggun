@@ -10,7 +10,7 @@ module Loggun
       precision: :milliseconds,
       controllers: %w[ApplicationController]
     }.freeze
-    MODIFIERS = %i[rails sidekiq clockwork incoming_http].freeze
+    MODIFIERS = %i[rails sidekiq clockwork incoming_http outgoing_http].freeze
 
     attr_accessor(
       :formatter,
