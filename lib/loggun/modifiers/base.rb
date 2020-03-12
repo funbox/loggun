@@ -1,13 +1,11 @@
+require 'singleton'
+
 module Loggun
   module Modifiers
     class Base
+      include Singleton
+
       class << self
-        private :new
-
-        def instance
-          @instance ||= new
-        end
-
         def use
           instance.apply
         end
