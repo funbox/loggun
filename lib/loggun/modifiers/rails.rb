@@ -1,7 +1,9 @@
-require_relative 'rails/railtie'
-
 module Loggun
   module Modifiers
-    module Rails; end
+    class Rails < Loggun::Modifiers::Base
+      def apply
+        require_relative 'rails/railtie' if defined?(::Rails)
+      end
+    end
   end
 end
