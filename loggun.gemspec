@@ -30,6 +30,7 @@ Gem::Specification.new do |spec|
 
   spec.add_development_dependency 'bundler', '~> 2.0'
   spec.add_development_dependency 'clockwork', '~> 2.0'
+  spec.add_development_dependency 'http', '~> 4.0'
   spec.add_development_dependency 'rails', '~> 6.0'
   spec.add_development_dependency 'rake', '~> 10.0'
   spec.add_development_dependency 'rspec', '~> 3.0'

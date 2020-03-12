@@ -3,6 +3,7 @@ require 'loggun/ordered_options'
 require 'loggun/formatter'
 require 'loggun/config'
 require 'loggun/modifiers'
+require 'loggun/modifiers/base'
 require 'loggun/helpers'
 
 module Loggun

@@ -1,10 +1,18 @@
-require_relative 'clockwork/manager'
-require_relative 'clockwork/methods'
+# frozen_string_literal: true
+
+if defined?(::Clockwork)
+  require_relative 'clockwork/manager'
+  require_relative 'clockwork/methods'
+end
 
 module Loggun
   module Modifiers
-    module Clockwork
-      ::Clockwork.configure {}
+    class Clockwork < Loggun::Modifiers::Base
+      def apply
+        return unless defined?(::Clockwork)
+
+        ::Clockwork.configure {}
+      end
     end
   end
 end

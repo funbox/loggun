@@ -10,14 +10,15 @@ module Loggun
       precision: :milliseconds,
       controllers: %w[ApplicationController]
     }.freeze
-    MODIFIERS = %i[rails sidekiq clockwork incoming_http outgoing_http].freeze
+    DEFAULT_MODIFIERS = %i[rails sidekiq clockwork incoming_http outgoing_http].freeze
 
     attr_accessor(
       :formatter,
       :pattern,
       :precision,
       :modifiers,
-      :controllers
+      :controllers,
+      :custom_modifiers
     )
 
     def initialize
@@ -26,7 +27,7 @@ module Loggun
       @pattern = DEFAULTS[:pattern]
       @modifiers = Loggun::OrderedOptions.new
       @controllers = DEFAULTS[:controllers]
-      set_modifiers
+      @custom_modifiers = []
     end
 
     class << self
@@ -37,17 +38,27 @@ module Loggun
       end
 
       def use_modifiers
-        MODIFIERS.each do |modifier|
-          if instance.modifiers.public_send(modifier)
-            require_relative "modifiers/#{modifier}"
-          end
+        DEFAULT_MODIFIERS.each do |modifier|
+          next unless instance.modifiers.public_send(modifier)
+
+          require_relative "modifiers/#{modifier}"
+          klass = Loggun::Modifiers.const_get(modifier.to_s.camelize)
+          klass.use
         end
+
+        instance.custom_modifiers.each(&:use)
       end
 
       def setup_formatter(app)
         Loggun.application = app
         Loggun.application.logger.formatter = instance.formatter
       end
+    end
+
+    def add_modifier(modifier)
+      return unless modifier.respond_to? :use
+
+      custom_modifiers << modifier
     end
 
     def timestamp_precision
@@ -58,14 +69,6 @@ module Loggun
       when :nanos, :nanoseconds, :ns then 9
       else
         3 # milliseconds
-      end
-    end
-
-    private
-
-    def set_modifiers
-      MODIFIERS.each do |modifier|
-        modifiers.send(modifier, false)
       end
     end
   end
