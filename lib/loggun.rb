@@ -1,13 +1,16 @@
 require 'loggun/version'
-require 'loggun/config'
-require 'loggun/helpers'
 require 'loggun/ordered_options'
+require 'loggun/formatter'
+require 'loggun/config'
 require 'loggun/modifiers'
+require 'loggun/modifiers/base'
+require 'loggun/helpers'
 
 module Loggun
   class Error < StandardError; end
 
   class << self
+
     include Loggun::Helpers
 
     attr_accessor :application
@@ -20,11 +23,6 @@ module Loggun
           application.logger.send(method, attrs)
         end
       end
-    end
-
-    def setup(app)
-      self.application = app
-      application.logger.formatter = Loggun::Formatter.new
     end
   end
 end

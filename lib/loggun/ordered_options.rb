@@ -1,6 +1,6 @@
 module Loggun
   class OrderedOptions < Hash
-    alias_method :_get, :[] # preserve the original #[] method
+    alias _get [] # preserve the original #[] method
     protected :_get # make it protected
 
     def []=(key, value)
@@ -13,20 +13,20 @@ module Loggun
 
     def method_missing(name, *args)
       name_string = +name.to_s
-      if name_string.chomp!("=")
+      if name_string.chomp!('=')
         self[name_string] = args.first
       else
-        bangs = name_string.chomp!("!")
+        bangs = name_string.chomp!('!')
 
         if bangs
-          self[name_string].presence || raise(KeyError.new(":#{name_string} is blank"))
+          self[name_string].presence || raise(KeyError, ":#{name_string} is blank")
         else
           self[name_string]
         end
       end
     end
 
-    def respond_to_missing?(name, include_private)
+    def respond_to_missing?(_name, _include_private)
       true
     end
   end

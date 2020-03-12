@@ -1,5 +1,4 @@
 require 'singleton'
-require 'loggun/formatter'
 
 module Loggun
   ## Class for configurations
@@ -8,15 +7,18 @@ module Loggun
 
     DEFAULTS = {
       pattern: '%{time} - %{pid} %{severity} %{type} %{tags_text}%{agent} %{message}',
-      precision: :milliseconds
+      precision: :milliseconds,
+      controllers: %w[ApplicationController]
     }.freeze
+    DEFAULT_MODIFIERS = %i[rails sidekiq clockwork incoming_http outgoing_http].freeze
 
     attr_accessor(
       :formatter,
       :pattern,
       :precision,
       :modifiers,
-      :enable_rails
+      :controllers,
+      :custom_modifiers
     )
 
     def initialize
@@ -24,14 +26,39 @@ module Loggun
       @precision = DEFAULTS[:precision]
       @pattern = DEFAULTS[:pattern]
       @modifiers = Loggun::OrderedOptions.new
-      set_modifiers
+      @controllers = DEFAULTS[:controllers]
+      @custom_modifiers = []
     end
 
     class << self
       def configure(&block)
         block.call(instance)
+        use_modifiers
         instance
       end
+
+      def use_modifiers
+        DEFAULT_MODIFIERS.each do |modifier|
+          next unless instance.modifiers.public_send(modifier)
+
+          require_relative "modifiers/#{modifier}"
+          klass = Loggun::Modifiers.const_get(modifier.to_s.camelize)
+          klass.use
+        end
+
+        instance.custom_modifiers.each(&:use)
+      end
+
+      def setup_formatter(app)
+        Loggun.application = app
+        Loggun.application.logger.formatter = instance.formatter
+      end
+    end
+
+    def add_modifier(modifier)
+      return unless modifier.respond_to? :use
+
+      custom_modifiers << modifier
     end
 
     def timestamp_precision
@@ -42,14 +69,6 @@ module Loggun
       when :nanos, :nanoseconds, :ns then 9
       else
         3 # milliseconds
-      end
-    end
-
-    private
-
-    def set_modifiers
-      Loggun::Modifiers::MODIFIERS.each do |method|
-        modifiers.send(method, false)
       end
     end
   end
