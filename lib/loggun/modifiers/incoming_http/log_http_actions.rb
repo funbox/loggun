@@ -19,7 +19,7 @@ module LogHttpActions
       data[:success] = success
       data[:error] = parsed_response['error_code'] unless success
     end
-    Loggun.info type, data
+    Loggun.log_info type, data
   end
 
   def clean_pathname

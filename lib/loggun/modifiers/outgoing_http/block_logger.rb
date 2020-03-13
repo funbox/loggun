@@ -4,7 +4,7 @@ class BlockLogger
       define_method(method) do |&block|
         type = 'http_requests.outgoing.'
         type += caller[0][/request/] ? 'start' : 'response'
-        Loggun.send(method, type, block.call)
+        Loggun.send("log_#{method}".to_sym, type, args, &block)
       end
     end
   end

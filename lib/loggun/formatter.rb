@@ -8,10 +8,24 @@ module Loggun
       data = Hash.new(DEFAULT_VALUE)
       data[:time] = time.iso8601(config.timestamp_precision)
       data[:pid] = Process.pid
+
+      if message.is_a?(Hash)
+        if config.parent_transaction_to_message && parent_transaction
+          message[:parent_transaction] = parent_transaction
+        end
+        message = JSON.generate(message)
+      end
+
       data[:message] = message.to_s.tr("\r\n", ' ').strip
       data[:severity] = severity&.present? ? severity.to_s : 'INFO'
       data[:tags_text] = tags_text
-      data[:type] = Loggun.type
+      data[:type] = Loggun.type || DEFAULT_VALUE.dup
+      data[:transaction_id] = Loggun.transaction_id
+      data[:parent_transaction] = parent_transaction if parent_transaction
+
+      if data[:transaction_id]&.to_i != Process.pid && data[:type] != DEFAULT_VALUE
+        data[:type] = "#{data[:type]}##{data[:transaction_id]}"
+      end
 
       format(config.pattern + "\n", data)
     end
@@ -52,6 +66,12 @@ module Loggun
     end
 
     private
+
+    def parent_transaction
+      return unless Loggun.parent_type && Loggun.parent_transaction_id
+
+      "#{Loggun.parent_type}##{Loggun.parent_transaction_id}"
+    end
 
     def config
       Loggun::Config.instance
