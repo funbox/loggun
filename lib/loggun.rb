@@ -13,5 +13,9 @@ module Loggun
     include Loggun::Helpers
 
     attr_accessor :application
+
+    %i[unknown fatal error warn info debug].each do |method|
+      alias_method method, "log_#{method}"
+    end
   end
 end

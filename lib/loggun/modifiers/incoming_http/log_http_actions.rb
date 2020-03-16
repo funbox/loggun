@@ -21,7 +21,7 @@ module LogHttpActions
       error = instance_exec(&modifier_config.error_info)
       data[:error] = error if error
     end
-    Loggun.log_info type, data
+    Loggun.info type, data
   end
 
   def clean_pathname
