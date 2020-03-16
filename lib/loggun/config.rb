@@ -7,6 +7,7 @@ module Loggun
 
     DEFAULTS = {
       pattern: '%{time} - %{pid} %{severity} %{type} %{tags_text}%{agent} %{message}',
+      parent_transaction_to_message: true,
       precision: :milliseconds,
       incoming_http: {
         controllers: %w[ApplicationController],
@@ -19,6 +20,7 @@ module Loggun
     attr_accessor(
       :formatter,
       :pattern,
+      :parent_transaction_to_message,
       :precision,
       :modifiers,
       :custom_modifiers
@@ -28,6 +30,7 @@ module Loggun
       @formatter = Loggun::Formatter.new
       @precision = DEFAULTS[:precision]
       @pattern = DEFAULTS[:pattern]
+      @parent_transaction_to_message = DEFAULTS[:parent_transaction_to_message]
       @modifiers = Loggun::OrderedOptions.new
       @custom_modifiers = []
       set_default_modifiers
