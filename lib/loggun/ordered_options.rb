@@ -4,6 +4,11 @@ module Loggun
     protected :_get # make it protected
 
     def []=(key, value)
+      if self[key.to_sym].is_a?(Loggun::OrderedOptions) &&
+         [true, false].include?(value)
+        return self[key.to_sym][:enable] = value
+      end
+
       super(key.to_sym, value)
     end
 
