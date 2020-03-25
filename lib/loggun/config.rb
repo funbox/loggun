@@ -9,7 +9,11 @@ module Loggun
       pattern: '%{time} - %{pid} %{severity} %{type} %{tags_text}%{agent} %{message}',
       parent_transaction_to_message: true,
       precision: :milliseconds,
-      controllers: %w[ApplicationController]
+      incoming_http: {
+        controllers: %w[ApplicationController],
+        success_condition: -> { response.code == '200' },
+        error_info: -> { nil }
+      }
     }.freeze
     DEFAULT_MODIFIERS = %i[rails sidekiq clockwork incoming_http outgoing_http].freeze
 
@@ -19,7 +23,6 @@ module Loggun
       :parent_transaction_to_message,
       :precision,
       :modifiers,
-      :controllers,
       :custom_modifiers
     )
 
@@ -29,8 +32,8 @@ module Loggun
       @pattern = DEFAULTS[:pattern]
       @parent_transaction_to_message = DEFAULTS[:parent_transaction_to_message]
       @modifiers = Loggun::OrderedOptions.new
-      @controllers = DEFAULTS[:controllers]
       @custom_modifiers = []
+      set_default_modifiers
     end
 
     class << self
@@ -42,7 +45,7 @@ module Loggun
 
       def use_modifiers
         DEFAULT_MODIFIERS.each do |modifier|
-          next unless instance.modifiers.public_send(modifier)
+          next unless instance.modifiers.public_send(modifier)&.enable
 
           require_relative "modifiers/#{modifier}"
           klass = Loggun::Modifiers.const_get(modifier.to_s.camelize)
@@ -55,6 +58,16 @@ module Loggun
       def setup_formatter(app)
         Loggun.application = app
         Loggun.application.logger.formatter = instance.formatter
+      end
+    end
+
+    def set_default_modifiers
+      DEFAULT_MODIFIERS.each do |modifier|
+        modifiers[modifier] = Loggun::OrderedOptions.new
+        modifiers[modifier].enable = false
+        next unless DEFAULTS[modifier].is_a?(Hash)
+
+        modifiers[modifier].merge!(DEFAULTS[modifier])
       end
     end
 

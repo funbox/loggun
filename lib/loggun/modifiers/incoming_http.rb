@@ -6,7 +6,8 @@ module Loggun
       def apply
         return unless defined?(ActionPack)
 
-        Loggun::Config.instance.controllers.each do |controller|
+        controllers = Loggun::Config.instance.modifiers.incoming_http.controllers
+        controllers.each do |controller|
           controller.constantize.class_eval do
             include LogHttpActions
             around_action :log_http_actions
