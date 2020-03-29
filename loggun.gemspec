@@ -5,11 +5,11 @@ require 'loggun/version'
 Gem::Specification.new do |spec|
   spec.name          = 'loggun'
   spec.version       = Loggun::VERSION
-  spec.authors       = ['Aleksandr Noskov']
-  spec.email         = ['nemestny@politeh.ru']
+  spec.authors       = ['Aleksandr Noskov', 'Sergey Nesterov']
+  spec.email         = ['nemestny@politeh.ru', 'qnesterr@gmail.com']
 
   spec.summary       = 'Loggun'
-  spec.description   = 'Loggun'
+  spec.description   = 'Gem for formatting ruby application logs'
   spec.homepage      = 'https://github.com/funbox/loggun'
   spec.license       = 'MIT'
 
