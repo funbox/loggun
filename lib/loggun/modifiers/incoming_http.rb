@@ -1,5 +1,3 @@
-require_relative 'incoming_http/log_http_actions'
-
 module Loggun
   module Modifiers
     class IncomingHttp < Loggun::Modifiers::Base
@@ -9,8 +7,7 @@ module Loggun
         controllers = Loggun::Config.instance.modifiers.incoming_http.controllers
         controllers.each do |controller|
           controller.constantize.class_eval do
-            include LogHttpActions
-            around_action :log_http_actions
+            include Loggun::HttpHelpers
           end
         end
       end
