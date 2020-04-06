@@ -5,6 +5,8 @@ require 'loggun/config'
 require 'loggun/modifiers'
 require 'loggun/modifiers/base'
 require 'loggun/helpers'
+require 'loggun/http_helpers'
+require 'logger'
 
 module Loggun
   class Error < StandardError; end
@@ -12,10 +14,22 @@ module Loggun
   class << self
     include Loggun::Helpers
 
-    attr_accessor :application
+    attr_writer :logger
 
     %i[unknown fatal error warn info debug].each do |method|
       alias_method method, "log_#{method}"
+    end
+
+    def logger
+      @logger ||= default_logger
+    end
+
+    private
+
+    def default_logger
+      logger = Logger.new(STDOUT)
+      logger.formatter = Config.instance.formatter
+      logger
     end
   end
 end

@@ -1,4 +1,5 @@
-require 'date'
+require 'time'
+require 'json'
 
 module Loggun
   class Formatter
@@ -17,13 +18,14 @@ module Loggun
       end
 
       data[:message] = message.to_s.tr("\r\n", ' ').strip
-      data[:severity] = severity&.present? ? severity.to_s : 'INFO'
+      data[:severity] = severity&.to_s || 'INFO'
       data[:tags_text] = tags_text
       data[:type] = Loggun.type || DEFAULT_VALUE.dup
       data[:transaction_id] = Loggun.transaction_id
       data[:parent_transaction] = parent_transaction if parent_transaction
 
-      if data[:transaction_id]&.to_i != Process.pid && data[:type] != DEFAULT_VALUE
+      if data[:transaction_id] && data[:type] != DEFAULT_VALUE &&
+         data[:transaction_id].to_i != Process.pid
         data[:type] = "#{data[:type]}##{data[:transaction_id]}"
       end
 

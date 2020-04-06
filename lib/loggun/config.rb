@@ -56,8 +56,8 @@ module Loggun
       end
 
       def setup_formatter(app)
-        Loggun.application = app
-        Loggun.application.logger.formatter = instance.formatter
+        Loggun.logger = app.logger
+        Loggun.logger.formatter = instance.formatter
       end
     end
 

@@ -60,8 +60,8 @@ module Loggun
     %i[unknown fatal error warn info debug].each do |method|
       define_method("log_#{method}") do |*args, **attrs, &block|
         type = args.shift
-        next application.logger.send(method, type, &block) if args.empty? &&
-                                                              attrs.empty?
+        next logger.send(method, type, &block) if args.empty? &&
+                                                  attrs.empty?
 
         method_name = caller_locations.first.label.split(' ').last
         type = log_type(type, method_name)
@@ -78,10 +78,10 @@ module Loggun
             attrs[:hidden] = { error: { backtrace: error.backtrace } }
           end
         end
-        attrs[:value] = args if args.present?
+        attrs[:value] = args unless args.empty?
 
         with_type(type) do
-          application.logger.send(method, **attrs, &block)
+          logger.send(method, **attrs, &block)
         end
       end
     end
@@ -171,8 +171,8 @@ module Loggun
       "#{SecureRandom.uuid[0..7]}_#{DateTime.now.strftime('%Q')}"
     end
 
-    def application
-      Loggun.application
+    def logger
+      Loggun.logger
     end
   end
 end
