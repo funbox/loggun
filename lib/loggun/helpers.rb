@@ -3,53 +3,67 @@ require 'securerandom'
 module Loggun
   module Helpers
     SKIPPED_METHODS = %i[
-      initialize loggun logger modified_methods
+      initialize loggun logger log_modified_methods loggun_init in_log_transaction with_log_type
     ].freeze
     DEFAULT_TYPE = 'class'.freeze
 
     def self.included(klass)
+      klass.extend(InitMethods)
+      klass.loggun_init
       klass.extend(ClassMethods)
-      klass.init
     end
 
-    module ClassMethods
+    module InitMethods
       attr_accessor(
         :with_log_transaction_id,
         :log_transaction_generator,
         :log_entity_name,
         :log_entity_action,
-        :modified_methods,
-        :generate_transaction_except
+        :log_modified_methods,
+        :log_skip_methods,
+        :log_only_methods,
+        :log_all_methods,
+        :log_transaction_except
       )
 
+      def loggun_init
+        @log_modified_methods = []
+        @log_all_methods = false
+      end
+    end
+
+    module ClassMethods
       def log_options(**options)
         @log_entity_name = options[:entity_name]
         @log_entity_action = options[:entity_action]
         @with_log_transaction_id = options[:as_transaction]
         @log_transaction_generator = options[:transaction_generator]
-        @generate_transaction_except = options[:generate_transaction_except]&.map(&:to_sym)
-      end
-
-      def init
-        @modified_methods = []
+        @log_transaction_except = options[:log_transaction_except]&.map(&:to_sym)
+        @log_skip_methods = options[:except]&.map(&:to_sym)
+        @log_only_methods = options[:only]&.map(&:to_sym)
+        @log_all_methods = options[:log_all_methods]
       end
 
       def method_added(method_name)
         super
-        @modified_methods ||= []
-        return if SKIPPED_METHODS.include?(method_name) ||
-                  modified_methods.include?(method_name)
+        @log_modified_methods ||= []
 
-        modified_methods << method_name
+        unless log_all_methods
+          return if log_skip_methods&.include?(method_name) || !log_only_methods&.include?(method_name)
+        end
+
+        return if SKIPPED_METHODS.include?(method_name) || log_modified_methods.include?(method_name)
+
+        log_modified_methods << method_name
         method = instance_method(method_name)
         undef_method(method_name)
 
         define_method(method_name) do |*args, &block|
-          if self.class.generate_transaction_except&.include?(method_name.to_sym)
+          if self.class.log_transaction_except&.include?(method_name.to_sym)
             method.bind(self).call(*args, &block)
           else
             type = log_type(nil, method_name)
-            in_transaction(type) do
+            in_log_transaction(type) do
               method.bind(self).call(*args, &block)
             end
           end
@@ -57,19 +71,15 @@ module Loggun
       end
     end
 
-    %i[unknown fatal error warn info debug].each do |method|
-      define_method("log_#{method}") do |*args, **attrs, &block|
+    %i[unknown fatal error warn info debug].each do |method_name|
+      define_method("log_#{method_name}") do |*args, **attrs, &block|
         type = args.shift
-        next logger.send(method, type, &block) if args.empty? &&
-                                                  attrs.empty?
+        next logger.send(method_name, type, &block) if args.empty? && attrs.empty?
 
         method_name = caller_locations.first.label.split(' ').last
         type = log_type(type, method_name)
 
-        if %i[fatal error].include?(method)
-          methods = args.first.methods
-          next unless methods.include?(:message) && methods.include?(:backtrace)
-
+        if %i[fatal error].include?(method_name) && %i[backtrace message].all? { |m| args.first.respond_to?(m) }
           error = args.shift
           attrs[:error] = { class: error.class, msg: error.message }
           if attrs[:hidden]
@@ -78,10 +88,10 @@ module Loggun
             attrs[:hidden] = { error: { backtrace: error.backtrace } }
           end
         end
-        attrs[:value] = args unless args.empty?
+        attrs[:message] = args unless args.empty?
 
-        with_type(type) do
-          logger.send(method, **attrs, &block)
+        with_log_type(type) do
+          logger.send(method_name, **attrs, &block)
         end
       end
     end
@@ -98,7 +108,7 @@ module Loggun
       end
     end
 
-    def in_transaction(current_type = nil, current_transaction_id = nil)
+    def in_log_transaction(current_type = nil, current_transaction_id = nil)
       current_transaction_id ||= generate_log_transaction_id
       previous_transaction_id = self.parent_transaction_id
       previous_type = self.parent_type
@@ -117,7 +127,7 @@ module Loggun
       self.parent_type = previous_type
     end
 
-    def with_type(current_type)
+    def with_log_type(current_type)
       previous_type = self.type
       self.type = current_type
       yield
@@ -163,7 +173,6 @@ module Loggun
     end
 
     def generate_log_transaction_id
-      return unless self.class.with_log_transaction_id
       if self.class.log_transaction_generator
         return self.class.log_transaction_generator.call
       end
