@@ -29,7 +29,7 @@ module Loggun
         data[:type] = "#{data[:type]}##{data[:transaction_id]}"
       end
 
-      format(config.pattern + "\n", data).gsub(/\-\s\-/, '-')
+      format(config.pattern + "\n", data)
     end
 
     def tagged(*tags)

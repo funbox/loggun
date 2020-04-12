@@ -136,22 +136,20 @@ module Loggun
     end
 
     def log_type(type, method_name)
+      klass = self.class
       type ||= DEFAULT_TYPE.dup
       type_as_arr = type.split('.')
-      klass = self.class
-      log_entity_name = klass.log_entity_name if klass.respond_to?(:log_entity_name)
-      log_entity_name ||= underscore(klass.name)
-      type << ".#{log_entity_name}" if type_as_arr.size == 1
+
+      log_entity_name = klass.respond_to?(:log_entity_name) ? klass.log_entity_name : underscore(klass.name)
+      type_as_arr << log_entity_name if type_as_arr.size == 1
 
       return type unless klass.respond_to?(:log_entity_action)
 
-      if klass.log_entity_action && type_as_arr.size < 3
-        if klass.log_entity_action == :method_name && method_name
-          type << ".#{method_name}"
-        end
+      if klass.log_entity_action && klass.log_entity_action == :method_name && type_as_arr.size < 3 && method_name
+        type_as_arr << method_name
       end
 
-      type
+      type_as_arr.join('.')
     end
 
     private
