@@ -48,10 +48,8 @@ module Loggun
         super
         @log_modified_methods ||= []
 
-        unless log_all_methods
-          return if log_skip_methods&.include?(method_name) || !log_only_methods&.include?(method_name)
-        end
-
+        return if !log_all_methods && !log_only_methods&.include?(method_name)
+        return if log_skip_methods&.include?(method_name)
         return if SKIPPED_METHODS.include?(method_name) || log_modified_methods.include?(method_name)
 
         log_modified_methods << method_name
