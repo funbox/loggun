@@ -76,8 +76,8 @@ module Loggun
         type = args.shift
         next logger.send(method_name, type, &block) if args.empty? && attrs.empty?
 
-        method_name = caller_locations.first.label.split(' ').last
-        type = log_type(type, method_name)
+        caller_method_name = caller_locations.first.label.split(' ').last
+        type = log_type(type, caller_method_name)
 
         if %i[fatal error].include?(method_name) && %i[backtrace message].all? { |m| args.first.respond_to?(m) }
           error = args.shift
