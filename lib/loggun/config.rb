@@ -13,9 +13,13 @@ module Loggun
         controllers: %w[ApplicationController],
         success_condition: -> { response.code == '200' },
         error_info: -> { nil }
+      },
+      active_record: {
+        log_subscriber_class_name: '::Loggun::Modifiers::ActiveRecord::LoggunLogSubscriber',
+        payload_keys: %i[sql name duration source]
       }
     }.freeze
-    DEFAULT_MODIFIERS = %i[rails sidekiq clockwork incoming_http outgoing_http].freeze
+    DEFAULT_MODIFIERS = %i[rails active_record sidekiq clockwork incoming_http outgoing_http].freeze
 
     attr_accessor(
       :formatter,
