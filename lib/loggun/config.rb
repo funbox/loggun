@@ -55,9 +55,9 @@ module Loggun
         instance.custom_modifiers.each(&:use)
       end
 
-      def setup_formatter(app)
+      def setup_formatter(app, formatter = nil)
         Loggun.logger = app.logger
-        Loggun.logger.formatter = instance.formatter
+        Loggun.logger.formatter = formatter || instance.formatter
       end
     end
 

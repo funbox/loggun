@@ -5,7 +5,7 @@ module Loggun
   class Formatter
     DEFAULT_VALUE = '-'.freeze
 
-    def call(severity, time, _program_name, message)
+    def call(severity, time, _program_name, message, loggun_type: nil)
       data = Hash.new(DEFAULT_VALUE)
       data[:time] = time.iso8601(config.timestamp_precision)
       data[:pid] = Process.pid
@@ -20,7 +20,7 @@ module Loggun
       data[:message] = message.to_s.tr("\r\n", ' ').strip
       data[:severity] = severity&.to_s || 'INFO'
       data[:tags_text] = tags_text
-      data[:type] = Loggun.type || DEFAULT_VALUE.dup
+      data[:type] = loggun_type || Loggun.type || DEFAULT_VALUE.dup
       data[:transaction_id] = Loggun.transaction_id
       data[:parent_transaction] = parent_transaction if parent_transaction
 
@@ -29,7 +29,7 @@ module Loggun
         data[:type] = "#{data[:type]}##{data[:transaction_id]}"
       end
 
-      format(config.pattern + "\n", data)
+      format(config.pattern + "\n", data).gsub(/\-\s\-/, '-')
     end
 
     def tagged(*tags)
