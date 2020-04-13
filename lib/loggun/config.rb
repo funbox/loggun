@@ -6,7 +6,7 @@ module Loggun
     include Singleton
 
     DEFAULTS = {
-      pattern: '%{time} - %{pid} %{severity} %{type} %{tags_text}%{agent} %{message}',
+      pattern: '%{time} - %{pid} %{severity} %{type} %{tags_text} %{message}',
       parent_transaction_to_message: true,
       precision: :milliseconds,
       incoming_http: {
