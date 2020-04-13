@@ -6,16 +6,20 @@ module Loggun
     include Singleton
 
     DEFAULTS = {
-      pattern: '%{time} - %{pid} %{severity} %{type} %{tags_text}%{agent} %{message}',
+      pattern: '%{time} - %{pid} %{severity} %{type} %{tags_text} %{message}',
       parent_transaction_to_message: true,
       precision: :milliseconds,
       incoming_http: {
         controllers: %w[ApplicationController],
         success_condition: -> { response.code == '200' },
         error_info: -> { nil }
+      },
+      active_record: {
+        log_subscriber_class_name: '::Loggun::Modifiers::ActiveRecord::LoggunLogSubscriber',
+        payload_keys: %i[sql name duration source]
       }
     }.freeze
-    DEFAULT_MODIFIERS = %i[rails sidekiq clockwork incoming_http outgoing_http].freeze
+    DEFAULT_MODIFIERS = %i[rails active_record sidekiq clockwork incoming_http outgoing_http].freeze
 
     attr_accessor(
       :formatter,
@@ -55,9 +59,9 @@ module Loggun
         instance.custom_modifiers.each(&:use)
       end
 
-      def setup_formatter(app)
+      def setup_formatter(app, formatter = nil)
         Loggun.logger = app.logger
-        Loggun.logger.formatter = instance.formatter
+        Loggun.logger.formatter = formatter || instance.formatter
       end
     end
 

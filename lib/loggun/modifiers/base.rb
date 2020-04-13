@@ -14,6 +14,10 @@ module Loggun
       def apply
         raise NotImplementedError, 'You must implement #apply in your modifier.'
       end
+
+      def config
+        Loggun::Config.instance
+      end
     end
   end
 end

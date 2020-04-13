@@ -21,6 +21,23 @@ gem 'loggun'
     $ bundle
 
 ## Использование
+Вы можете использовать Loggun как обертку для вашего Logger. Для этого необходимо передать
+ему инстанс вашего логгера и настроить его formatter:
+```ruby
+Loggun.logger = Rails.logger
+Loggun.logger.formatter = Loggun::Formatter.new
+```
+
+Теперь вы можете использовать Loggun для логгирования в стандартизированном формате:
+```ruby
+Loggun.info('http_request.api.request', user_id: current_user.id)
+#=> 2020-04-11T22:35:04.225+03:00 - 170715 INFO http_request.api.request - {"user_id": 5465}
+...
+Loggun.info('http_request.api.response', user_id: current_user.id, success: true)
+#=> 2020-04-11T22:35:04.225+03:00 - 170715 INFO http_request.api.response - {"user_id": 5465, "success": true} 
+``` 
+
+Подробнее об конфигурации и использовании Loggun ниже.
 
 ### Конфигурация
 Для успешной конфигурации гема необходимо подгружать файл при инициализации вашего приложения.
@@ -42,14 +59,12 @@ end
 ```
 Все настройки являются опциональными.
 #### Настройки
-`precision` - точность отметок времени. По умолчанию - `milliseconds`. Может принимать одно из следующих значений: `sec`, `seconds`, `ms`, `millis`, `milliseconds`, `us`, `micros`, `microseconds`, `ns`, `nanos`, `nanoseconds`
-
-`pattern` - шаблон для формата вывода данных в лог. Доступные ключи: `time`, `pid`, `severity`, `type`, `tags_text`, `message`, `parent_transaction`
-
-`parent_transaction_to_message` - признак необходимости добавлять значение `parent_transaction` в тело логируемого сообщения. 
-Вне зависимости от данной настройки можно использовать ключ `parent_transaction` в шаблоне `pattern`.
-
-`modifiers` - модификаторы для переопределения формата логирования указанного компонента. См. далее.
+- `precision` - точность отметок времени. По умолчанию - `milliseconds`. Может принимать одно из следующих значений: `sec`, `seconds`, `ms`, `millis`, `milliseconds`, `us`, `micros`, `microseconds`, `ns`, `nanos`, `nanoseconds`
+- `pattern` - текстовый шаблон для формата вывода данных в лог. 
+Доступные ключи: `time`, `pid`, `severity`, `type`, `tags_text`, `message`, `parent_transaction`
+- `parent_transaction_to_message` - признак необходимости добавлять значение `parent_transaction` в тело логируемого сообщения. 
+Вне зависимости от данной настройки можно использовать ключ `parent_transaction` в шаблоне `pattern`. 
+- `modifiers` - модификаторы для переопределения формата логирования указанного компонента. См. далее.
 
 #### Модификаторы
 Каждый модифкатор может быть активирован двумя равнозначными способами:
@@ -61,16 +76,43 @@ config.modifiers.rails = true
 config.modifiers.rails.enable = true
 ```
 
-`rails` - модифицирует форматирование логгера Rails.
+##### Rails модификатор 
+`config.modifier.rails` - модифицирует форматирование логгера Rails.
 
-`sidekiq` - модифицирует форматирование логгера Sidekiq.
+##### Active Record модификатор
+`config.modifier.active_record` - добавляет (именно добавляет, а не модифицирует) нового подписчика на SQL события.
+SQL начинает дополнительно логгироваться в Loggun формате, severity - info. Например:
+```text
+2020-04-12T20:08:52.913+03:00 - 487257 INFO storage.sql.query - {"sql":"SELECT 1","name":null,"duration":0.837}
+```
+Пример настроек:
+```ruby
+Loggun::Config.configure do |config|
+  #...
+  config.modifiers.active_record.enable = true
+  config.modifiers.active_record.log_subscriber_class_name = 'MyApp::MyLogSubscriber'
+  config.modifiers.active_record.payload_keys = %i[sql duration]
+  #...
+end
+```
+- `log_subscriber_class_name` - имя класса, реализующего логирование sql события.
+Необходим метод `#sql`. По-умолчанию `::Loggun::Modifiers::ActiveRecord::LoggunLogSubscriber`
 
-`clockwork` - модифицирует форматирование логгера Clockwork.
+- `payload_keys` - необходимые ключи в полезной нарзуке. Используется в дефолтном классе. Доступные
+ключи: ```%i[sql name duration source]```.
 
-`outgoing_http` - добавляет логирование исходящих http запросов. 
+##### Sidekiq модификатор 
+`config.modifiers.sidekiq` - модифицирует форматирование логгера Sidekiq.
+
+##### Clockwork модификатор
+`config.modifiers.clockwork` - модифицирует форматирование логгера Clockwork.
+
+##### Модификатор исходящих HTTP запросово
+`config.modifiers.outgoing_http` - добавляет логирование исходящих http запросов. 
 На данный момент поддерживаются только запросы посредством гема `HTTP`.
 
-`incoming_http` - добавляет логирование входящих http запросов для контроллеров Rails.
+##### Модификатор входящих запросов в Rails
+ `config.modifiers.incoming_http` - добавляет логирование входящих http запросов для контроллеров Rails.
 Данный модификатор может иметь дополнительные настройки, которые устанавливаются следующим образом 
 (приведены значения по умолчанию):
 
@@ -84,15 +126,14 @@ Loggun::Config.configure do |config|
   #...
 end
 ```
+- `controllers` - массив имён базовых контроллеров, для которых необходимо добавить указанное логирование.
 
-`controllers` - массив имён базовых контроллеров, для которых необходимо добавить указанное логирование.
+- `success_condition` - лямбда, определяющая, содержит ли успех ответ экшена. Например `-> { JSON.parse(response.body)['result'] == 'ok' }`
 
-`success_condition` - лямбда, определяющая, содержит ли успех ответ экшена. Например `-> { JSON.parse(response.body)['result'] == 'ok' }`
-
-`error_info` - лямбда, позволяющая добавить в лог информацию об ошибке, содержащейся в неуспешном ответе экшена. 
+- `error_info` - лямбда, позволяющая добавить в лог информацию об ошибке, содержащейся в неуспешном ответе экшена. 
 Например `-> { JSON.parse(response.body)['error_code'] }`
 
-Для Rails 6 и выше данный модификатор может работать некорректно. 
+**Для Rails 6 и выше данный модификатор может работать некорректно.** 
 В этом случае можно указать в требуемом базовом контроллере строку:
 ```ruby
 include Loggun::HttpHelpers
@@ -100,8 +141,9 @@ include Loggun::HttpHelpers
 Это делает настройки `enable` и `controllers` модификатора безсполезными, 
 однако позволяет гарантированно логировать входящие http запросы.
 
-Настройки `success_condition` и `error_info` продолжают использоваться и могу быть установлены требуемым образом.
+Настройки `success_condition` и `error_info` продолжают использоваться и могут быть установлены требуемым образом.
 
+##### Персональные модификаторы
 Помимо указанных модификаторов существует возможность добавить собственный. 
 Необходимо уснаследовать его от `Loggun::Modifiers::Base` и указать в методе `apply` все необходимые действия.
 ```ruby
@@ -132,23 +174,34 @@ end
 class SomeClass
   include Loggun::Helpers
 
-  log_options entity_action: :method_name, as_transaction: true
+  log_options entity_action: :method_name, as_transaction: true, only: %i[download_data]
 
-  def some_action
-    log_info 'type_for_action', 'Information'
-    bar
-  end
-
-  def bar
-    log_info 'type_for_bar', 'Bar information'
+  def download_data
+    log_info 'http_request', 'Information'
+    # ... make http request here
+    log_info 'http_response', success: true
   end
 end
 ```
-Даёт подобный вывод в лог:
+При вызове `#download_data` мы получим следующий вывод в лог:
 ```
-2020-03-04T16:58:38.207+05:00 - 28476 INFO type_for_action.some_class.some_action#msg_id_1583323118203 - {"value":["Information"]}
-2020-03-04T16:58:38.208+05:00 - 28476 INFO type_for_bar.some_class.bar#msg_id_1583323118207 - {"value":["Bar information"],"parent_transaction":"class.geo_location__actual_location.fetch_input#msg_id_1583323118203"}
+2020-03-04T16:58:38.207+05:00 - 28476 INFO http_request.some_class.download_data#ffg5431_1583323118203 - {"message":["Information"]}
+2020-03-04T16:58:38.208+05:00 - 28476 INFO http_response.some_class.download_data#ffg5431_1583323118203 - {"success": true}
 ```
+
+**Важно**, что с хелпером log_options необходимо использовать только методы вида `log_<severity>`. 
+Методы модуля `Loggun` не будут работать.
+
+Список всех опций хелпера log_options:
+
+- `entity_name` - имя сущности метода, string
+- `entity_action` - действие сущности метода, string
+- `as_transaction` - добавлять уникальный ID транзакции для метода, boolean
+- `transaction_generator` - собственный генератор ID транзакции, lambda
+- `log_all_methods` - признак необходимости применения хелпера ко всем методам, boolean
+- `only` - список методов, для которых необходимо применить хелпер (работает только если `log_all_methods` - false), Array{Symbol}
+- `except` - список методов, которые надо исключить для хелпера, Array{Symbol}
+- `log_transaction_except` - список методов, логирование которых не нужно обогащать ID транзакции, Array{Symbol}
 
 ## License
 
