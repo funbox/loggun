@@ -19,7 +19,7 @@ module Loggun
         payload_keys: %i[sql name duration source]
       }
     }.freeze
-    DEFAULT_MODIFIERS = %i[rails active_record sidekiq clockwork incoming_http outgoing_http].freeze
+    DEFAULT_MODIFIERS = %i[rails active_record sidekiq clockwork outgoing_http].freeze
 
     attr_accessor(
       :formatter,
