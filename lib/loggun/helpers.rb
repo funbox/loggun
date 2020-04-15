@@ -150,6 +150,14 @@ module Loggun
       type_as_arr.join('.')
     end
 
+    def generate_log_transaction_id
+      if self.class.log_transaction_generator
+        return self.class.log_transaction_generator.call(self)
+      end
+
+      "#{SecureRandom.uuid[0..7]}_#{DateTime.now.strftime('%Q')}"
+    end
+
     private
 
     def normalize(type)
@@ -166,14 +174,6 @@ module Loggun
       word.tr!('-', '_')
       word.downcase!
       word
-    end
-
-    def generate_log_transaction_id
-      if self.class.log_transaction_generator
-        return self.class.log_transaction_generator.call
-      end
-
-      "#{SecureRandom.uuid[0..7]}_#{DateTime.now.strftime('%Q')}"
     end
 
     def logger
