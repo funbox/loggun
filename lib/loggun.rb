@@ -5,7 +5,6 @@ require 'loggun/config'
 require 'loggun/modifiers'
 require 'loggun/modifiers/base'
 require 'loggun/helpers'
-require 'loggun/http_helpers'
 require 'logger'
 
 module Loggun
