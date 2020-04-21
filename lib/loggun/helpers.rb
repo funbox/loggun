@@ -138,8 +138,10 @@ module Loggun
       type ||= DEFAULT_TYPE.dup
       type_as_arr = type.split('.')
 
-      log_entity_name = klass.respond_to?(:log_entity_name) ? klass.log_entity_name : underscore(klass.name)
-      type_as_arr << log_entity_name if type_as_arr.size == 1
+      if type_as_arr.size == 1
+        log_entity_name = klass.respond_to?(:log_entity_name) ? klass.log_entity_name : underscore(klass.name.dup)
+        type_as_arr << log_entity_name
+      end
 
       return type unless klass.respond_to?(:log_entity_action)
 
