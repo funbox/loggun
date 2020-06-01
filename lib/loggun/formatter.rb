@@ -14,7 +14,12 @@ module Loggun
         if config.parent_transaction_to_message && parent_transaction
           message[:parent_transaction] = parent_transaction
         end
-        message = JSON.generate(message)
+
+        message = if config.json_format
+                    JSON.generate(message)
+                  else
+                    message.map { |key, value| "#{key}=#{value}" }.join(', ')
+                  end
       end
 
       data[:message] = message.to_s.tr("\r\n", ' ').strip
