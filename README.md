@@ -49,6 +49,7 @@ Loggun::Config.configure do |config|
   config.precision = :milliseconds
   config.pattern = '%{time} - %{pid} %{severity} %{type} %{tags_text} %{message}'
   config.parent_transaction_to_message = false
+  config.message_format = :json
 
   config.modifiers.rails = true
   config.modifiers.sidekiq = false
@@ -64,6 +65,9 @@ end
 Доступные ключи: `time`, `pid`, `severity`, `type`, `tags_text`, `message`, `parent_transaction`
 - `parent_transaction_to_message` - признак необходимости добавлять значение `parent_transaction` в тело логируемого сообщения. 
 Вне зависимости от данной настройки можно использовать ключ `parent_transaction` в шаблоне `pattern`. 
+- `message_format` - формат переменной message в шаблоне pattern. Доступны два формата: 
+  - `:json` - `message` логгируется как json строка
+  - `:key_value` - `message` логгируется в формате `key1=value1 key2=value2` 
 - `modifiers` - модификаторы для переопределения формата логирования указанного компонента. См. далее.
 
 #### Модификаторы
