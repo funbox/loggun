@@ -47,6 +47,7 @@ module Loggun
       def configure(&block)
         block.call(instance)
         use_modifiers
+        check_config
         instance
       end
 
@@ -60,6 +61,12 @@ module Loggun
         end
 
         instance.custom_modifiers.each(&:use)
+      end
+
+      def check_config
+        return if %i[json key_value].include? instance.message_format
+
+        raise FailureConfiguration, 'Unknown value for message_format'
       end
 
       def setup_formatter(app, formatter = nil)
@@ -94,5 +101,7 @@ module Loggun
         3 # milliseconds
       end
     end
+
+    class FailureConfiguration < StandardError; end
   end
 end
