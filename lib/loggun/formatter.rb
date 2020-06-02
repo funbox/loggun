@@ -85,10 +85,9 @@ module Loggun
       elsif config.message_format == :key_value
         message.map { |key, value| "#{key}=#{value}" }.join(', ')
       else
-        raise FailureConfiguration, 'Unknown value for message_format'
+        warn('Unknown value for message_format')
+        JSON.generate(message)
       end
     end
-
-    class FailureConfiguration < StandardError; end
   end
 end

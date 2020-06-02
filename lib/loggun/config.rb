@@ -21,6 +21,7 @@ module Loggun
       }
     }.freeze
     DEFAULT_MODIFIERS = %i[rails active_record sidekiq clockwork outgoing_http].freeze
+    MESSAGE_FORMATS = %i[json key_value].freeze
 
     attr_accessor(
       :formatter,
@@ -64,7 +65,7 @@ module Loggun
       end
 
       def check_config
-        return if %i[json key_value].include? instance.message_format
+        return if MESSAGE_FORMATS.include? instance.message_format
 
         raise FailureConfiguration, 'Unknown value for message_format'
       end
