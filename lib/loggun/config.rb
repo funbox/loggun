@@ -8,7 +8,7 @@ module Loggun
     DEFAULTS = {
       pattern: '%{time} - %{pid} %{severity} %{type} %{tags_text} %{message}',
       parent_transaction_to_message: true,
-      json_format: true,
+      message_format: :json,
       precision: :milliseconds,
       incoming_http: {
         controllers: %w[ApplicationController],
@@ -26,7 +26,7 @@ module Loggun
       :formatter,
       :pattern,
       :parent_transaction_to_message,
-      :json_format,
+      :message_format,
       :precision,
       :modifiers,
       :custom_modifiers
@@ -37,7 +37,7 @@ module Loggun
       @precision = DEFAULTS[:precision]
       @pattern = DEFAULTS[:pattern]
       @parent_transaction_to_message = DEFAULTS[:parent_transaction_to_message]
-      @json_format = DEFAULTS[:json_format]
+      @message_format = DEFAULTS[:message_format]
       @modifiers = Loggun::OrderedOptions.new
       @custom_modifiers = []
       set_default_modifiers
