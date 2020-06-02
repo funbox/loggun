@@ -83,7 +83,7 @@ module Loggun
       if config.message_format == :json
         JSON.generate(message)
       elsif config.message_format == :key_value
-        message.map { |key, value| "#{key}=#{value}" }.join(', ')
+        message.map { |key, value| "#{key}=#{value}" }.join(' ')
       else
         warn('Unknown value for message_format')
         JSON.generate(message)
