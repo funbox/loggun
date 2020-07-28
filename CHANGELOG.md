@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.1 - 2020-07-28
+* fixes
+  * fill type with class name for empty `log_entity_name`
+
 ## 0.4.0 - 2020-06-02
 * fixes
   * fix key_value join character to space
