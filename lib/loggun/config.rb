@@ -9,6 +9,7 @@ module Loggun
       pattern: '%{time} - %{pid} %{severity} %{type} %{tags_text} %{message}',
       parent_transaction_to_message: true,
       message_format: :json,
+      log_format: :custom,
       precision: :milliseconds,
       incoming_http: {
         controllers: %w[ApplicationController],
@@ -22,12 +23,14 @@ module Loggun
     }.freeze
     DEFAULT_MODIFIERS = %i[rails active_record sidekiq clockwork outgoing_http].freeze
     MESSAGE_FORMATS = %i[json key_value].freeze
+    LOG_FORMATS = %i[json custom].freeze
 
     attr_accessor(
       :formatter,
       :pattern,
       :parent_transaction_to_message,
       :message_format,
+      :log_format,
       :precision,
       :modifiers,
       :custom_modifiers
@@ -39,6 +42,7 @@ module Loggun
       @pattern = DEFAULTS[:pattern]
       @parent_transaction_to_message = DEFAULTS[:parent_transaction_to_message]
       @message_format = DEFAULTS[:message_format]
+      @log_format = DEFAULTS[:log_format]
       @modifiers = Loggun::OrderedOptions.new
       @custom_modifiers = []
       set_default_modifiers
@@ -65,9 +69,13 @@ module Loggun
       end
 
       def check_config
-        return if MESSAGE_FORMATS.include? instance.message_format
+        unless MESSAGE_FORMATS.include? instance.message_format
+          raise FailureConfiguration, 'Unknown value for message_format'
+        end
 
-        raise FailureConfiguration, 'Unknown value for message_format'
+        unless LOG_FORMATS.include? instance.log_format
+          raise FailureConfiguration, 'Unknown value for log_format'
+        end
       end
 
       def setup_formatter(app, formatter = nil)

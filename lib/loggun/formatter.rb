@@ -7,14 +7,16 @@ module Loggun
 
     def call(severity, time, _program_name, message, loggun_type: nil)
       data = Hash.new(DEFAULT_VALUE)
-      data[:time] = time.iso8601(config.timestamp_precision)
+      data[:timestamp] = time.utc.iso8601(config.timestamp_precision)
+      data[:time] = data[:timestamp] if config.log_format == :custom
+
       data[:pid] = Process.pid
 
       if message.is_a?(Hash)
         if config.parent_transaction_to_message && parent_transaction
           message[:parent_transaction] = parent_transaction
         end
-        message = format_message(message)
+        message = format_message(message) if config.log_format == :custom
       end
 
       data[:message] = message.to_s.tr("\r\n", ' ').strip
@@ -29,7 +31,11 @@ module Loggun
         data[:type] = "#{data[:type]}##{data[:transaction_id]}"
       end
 
-      format(config.pattern + "\n", data)
+      if config.log_format == :json
+        JSON.generate(data) + "\n"
+      else
+        format(config.pattern + "\n", data)
+      end
     end
 
     def tagged(*tags)

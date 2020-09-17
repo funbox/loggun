@@ -8,12 +8,14 @@ RSpec.describe Loggun::Config do
     let!(:precision) { %i[micros microseconds us].sample }
     let!(:pattern) { '%{time} %{message}' }
     let!(:message_format) { :json }
+    let!(:log_format) { :json }
 
     subject do
       described_class.configure do |config|
         config.precision = precision
         config.pattern = pattern
         config.message_format = message_format
+        config.log_format = log_format
       end
     end
 
@@ -24,11 +26,20 @@ RSpec.describe Loggun::Config do
         expect(instance.precision).to eq(precision)
         expect(instance.pattern).to eq(pattern)
         expect(instance.message_format).to eq(message_format)
+        expect(instance.log_format).to eq(log_format)
       end
     end
 
     context 'when message_format has unknown value' do
       let!(:message_format) { :test }
+
+      it 'raise error FailureConfiguration' do
+        expect { subject }.to raise_error(described_class::FailureConfiguration)
+      end
+    end
+
+    context 'when log_format has unknown value' do
+      let!(:log_format) { :test }
 
       it 'raise error FailureConfiguration' do
         expect { subject }.to raise_error(described_class::FailureConfiguration)
