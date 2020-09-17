@@ -9,7 +9,7 @@ module Loggun
       pattern: '%{time} - %{pid} %{severity} %{type} %{tags_text} %{message}',
       parent_transaction_to_message: true,
       message_format: :json,
-      log_format: :custom,
+      log_format: :plain,
       precision: :milliseconds,
       incoming_http: {
         controllers: %w[ApplicationController],
@@ -23,7 +23,7 @@ module Loggun
     }.freeze
     DEFAULT_MODIFIERS = %i[rails active_record sidekiq clockwork outgoing_http].freeze
     MESSAGE_FORMATS = %i[json key_value].freeze
-    LOG_FORMATS = %i[json custom].freeze
+    LOG_FORMATS = %i[json plain].freeze
 
     attr_accessor(
       :formatter,
@@ -33,7 +33,9 @@ module Loggun
       :log_format,
       :precision,
       :modifiers,
-      :custom_modifiers
+      :custom_modifiers,
+      :exclude_keys,
+      :only_keys
     )
 
     def initialize
@@ -45,6 +47,8 @@ module Loggun
       @log_format = DEFAULTS[:log_format]
       @modifiers = Loggun::OrderedOptions.new
       @custom_modifiers = []
+      @exclude_keys = []
+      @only_keys = []
       set_default_modifiers
     end
 

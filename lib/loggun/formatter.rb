@@ -8,7 +8,7 @@ module Loggun
     def call(severity, time, _program_name, message, loggun_type: nil)
       data = Hash.new(DEFAULT_VALUE)
       data[:timestamp] = time.utc.iso8601(config.timestamp_precision)
-      data[:time] = data[:timestamp] if config.log_format == :custom
+      data[:time] = data[:timestamp] if config.log_format == :plain
 
       data[:pid] = Process.pid
 
@@ -16,7 +16,7 @@ module Loggun
         if config.parent_transaction_to_message && parent_transaction
           message[:parent_transaction] = parent_transaction
         end
-        message = format_message(message) if config.log_format == :custom
+        message = format_message(message) if config.log_format == :plain
       end
 
       data[:message] = message.to_s.tr("\r\n", ' ').strip
@@ -32,6 +32,8 @@ module Loggun
       end
 
       if config.log_format == :json
+        data.except!(*config.exclude_keys) if config.only_keys.empty?
+        data.slice!(*config.only_keys) if config.only_keys.any?
         JSON.generate(data) + "\n"
       else
         format(config.pattern + "\n", data)
