@@ -9,13 +9,14 @@ RSpec.describe Loggun::Formatter do
 
     context 'when a pattern contains only time and message' do
       let!(:message) { 'message' }
-      let!(:timestamp) { '2020-02-11T06:53:26.186Z' }
+      let!(:timestamp) { '2020-02-11T11:53:26.186+05:00' }
       let!(:time) { DateTime.parse(timestamp) }
 
       before do
         Loggun::Config.instance.pattern = '%{time} %{message}'
         Loggun::Config.instance.precision = :ms
         Loggun::Config.instance.log_format = :plain
+        Loggun::Config.instance.force_utc = false
       end
 
       it 'returns correct string' do
@@ -23,14 +24,30 @@ RSpec.describe Loggun::Formatter do
       end
     end
 
+    context 'when :utc time format' do
+      let!(:timestamp) { '2020-02-11T06:53:26.186Z' }
+      let!(:time) { DateTime.parse(timestamp) }
+
+      before do
+        Loggun::Config.instance.pattern = '%{time}'
+        Loggun::Config.instance.precision = :ms
+        Loggun::Config.instance.force_utc = true
+      end
+
+      it 'returns correct string' do
+        expect(subject).to eq("#{timestamp}\n")
+      end
+    end
+
     context 'when :json log format' do
       let!(:message) { 'message' }
-      let!(:timestamp) { '2020-02-11T06:53:26.186Z' }
+      let!(:timestamp) { '2020-02-11T11:53:26.186+05:00' }
       let!(:time) { DateTime.parse(timestamp) }
 
       before do
         Loggun::Config.instance.precision = :ms
         Loggun::Config.instance.log_format = :json
+        Loggun::Config.instance.force_utc = false
       end
 
       context 'when exclude_keys and only_keys are empty' do

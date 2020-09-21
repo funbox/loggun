@@ -92,6 +92,10 @@ end
 - `parent_transaction_to_message` — если `true`, то значение `parent_transaction` будет добавлено в тело логируемого сообщения.
  
   Ключ `parent_transaction` в шаблоне `pattern` можно использовать вне зависимости от значения этой настройки. 
+  
+- `force_utc` — если `true`, то значение `time` будет переведено в UTC.
+  
+  По умолчанию `false`.
 
 - `message_format` — формат переменной `message` в шаблоне `pattern`. 
 
@@ -99,7 +103,7 @@ end
    
   - `:json` — `message` логируется как JSON-строка;
   - `:key_value` — `message` логируется в формате `key1=value1 key2=value2`.
-  
+
 - `log_format` — формат лога. 
 
   Доступные значения:

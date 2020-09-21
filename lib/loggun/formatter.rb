@@ -7,7 +7,8 @@ module Loggun
 
     def call(severity, time, _program_name, message, loggun_type: nil)
       data = Hash.new(DEFAULT_VALUE)
-      data[:timestamp] = time.utc.iso8601(config.timestamp_precision)
+      time = time.utc if config.force_utc
+      data[:timestamp] = time.iso8601(config.timestamp_precision)
       data[:time] = data[:timestamp] if config.log_format == :plain
 
       data[:pid] = Process.pid

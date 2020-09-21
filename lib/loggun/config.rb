@@ -10,6 +10,7 @@ module Loggun
       parent_transaction_to_message: true,
       message_format: :json,
       log_format: :plain,
+      force_utc: false,
       precision: :milliseconds,
       incoming_http: {
         controllers: %w[ApplicationController],
@@ -31,6 +32,7 @@ module Loggun
       :parent_transaction_to_message,
       :message_format,
       :log_format,
+      :force_utc,
       :precision,
       :modifiers,
       :custom_modifiers,
@@ -45,6 +47,7 @@ module Loggun
       @parent_transaction_to_message = DEFAULTS[:parent_transaction_to_message]
       @message_format = DEFAULTS[:message_format]
       @log_format = DEFAULTS[:log_format]
+      @force_utc = DEFAULTS[:force_utc]
       @modifiers = Loggun::OrderedOptions.new
       @custom_modifiers = []
       @exclude_keys = []
