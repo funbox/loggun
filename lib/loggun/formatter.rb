@@ -72,7 +72,7 @@ module Loggun
           message = format_message(message)
         else
           simple_message = message.delete(:message)
-          data[:metadata] = message
+          data[:metadata] = message if message != {}
           message = simple_message
         end
       end
