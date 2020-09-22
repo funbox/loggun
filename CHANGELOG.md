@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.0 - 2020-09-22
+* features
+  * `config.log_format` - for control full log rows format
+  * `config.exclude_keys`, `config.include_keys` - for include or exclude keys from `:json` log_format 
+
 ## 0.4.1 - 2020-07-28
 * fixes
   * fill type with class name for empty `log_entity_name`
