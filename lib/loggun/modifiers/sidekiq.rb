@@ -8,6 +8,10 @@ module Loggun
       def apply
         return unless defined?(::Sidekiq) && ::Sidekiq::VERSION >= MIN_SIDEKIQ_V
 
+        ::Sidekiq.client_middleware do |chain|
+          chain.add ClientMiddleware
+        end
+
         ::Sidekiq.configure_server do |config|
           Loggun::Config.setup_formatter(config, LoggunFormatter.new)
         end
@@ -18,6 +22,15 @@ module Loggun
           require 'loggun/modifiers/sidekiq/sidekiq6'
         else
           require 'loggun/modifiers/sidekiq/sidekiq4'
+        end
+      end
+
+      class ClientMiddleware
+        def call(worker_class, _msg, queue, _redis_pool)
+          yield.tap do |options|
+            msg = "Job #{worker_class} JID-#{options['jid']} enqueued to `#{queue}`"
+            Loggun.info('app.sidekiq.enqueued', msg, worker_class: worker_class, jid: options['jid'], queue: queue)
+          end
         end
       end
     end
