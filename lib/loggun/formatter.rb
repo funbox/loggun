@@ -8,19 +8,12 @@ module Loggun
     def call(severity, time, _program_name, message, loggun_type: nil)
       data = Hash.new(DEFAULT_VALUE)
       time = time.utc if config.force_utc
+      message = prepare_message(message)
+
       data[:timestamp] = time.iso8601(config.timestamp_precision)
       data[:time] = data[:timestamp] if config.log_format == :plain
-
       data[:pid] = Process.pid
-
-      if message.is_a?(Hash)
-        if config.parent_transaction_to_message && parent_transaction
-          message[:parent_transaction] = parent_transaction
-        end
-        message = format_message(message) if config.log_format == :plain
-      end
-
-      data[:message] = message.to_s.tr("\r\n", ' ').strip
+      data[:message] = message
       data[:severity] = severity&.to_s || 'INFO'
       data[:tags_text] = tags_text
       data[:type] = loggun_type || Loggun.type || DEFAULT_VALUE.dup
@@ -77,6 +70,21 @@ module Loggun
     end
 
     private
+
+    def prepare_message(message)
+      if message.is_a?(Hash)
+        if config.parent_transaction_to_message && parent_transaction
+          message[:parent_transaction] = parent_transaction
+        end
+        message = format_message(message) if config.log_format == :plain
+      end
+
+      if config.log_format == :plain
+        message.to_s.tr("\r\n", ' ').strip
+      else
+        message
+      end
+    end
 
     def parent_transaction
       return unless Loggun.parent_type && Loggun.parent_transaction_id
