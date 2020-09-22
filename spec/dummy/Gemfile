@@ -4,7 +4,6 @@ git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 gemspec(path: "../../")
 
 ruby '2.6.5'
-
 gem 'rails'
 
 group :development, :test do

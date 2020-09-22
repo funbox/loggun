@@ -86,7 +86,10 @@ module Loggun
             attrs[:hidden] = { error: { backtrace: error.backtrace } }
           end
         end
-        attrs[:message] = args unless args.empty?
+        unless args.empty?
+          attrs[:message] = args.first if args.size == 1
+          attrs[:message] ||= args
+        end
 
         with_log_type(type) do
           logger.send(method_name, **attrs, &block)
