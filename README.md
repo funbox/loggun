@@ -108,11 +108,25 @@ end
 
   Доступные значения:
    
-  - `:json` — лог формируется как JSON-строка игнорируя шаблон `pattern`;
+  - `:json` — лог формируется как JSON-строка игнорируя шаблон `pattern` и настройку `message_format`;
   - `:plain` — лог формируется по шаблону `pattern`.
   
   По умолчанию `:plain`.
   
+  При `log_format == :json` в `message` будет попадать только сообщение, которое было передано строкой. Сообщение, 
+  переданное хешем попадет в поле `metadata`. Пример:
+  ```ruby
+    Loggun.info("my.best.action", "message string", test: true)
+    # {
+    #    "metadata":{"test":true},
+    #    "message":"message string",
+    #    "type":"my.best.action",
+    #    "timestamp":"2020-09-22T14:57:22.233+03:00",
+    #    "severity":"INFO",
+    #    ...
+    #    }
+  ```
+      
 - `exclude_keys` — список ключей, которые будут исключены из лога.
 
    Используется, если `log_format` имеет значение `:json` и список `only_keys` пуст.

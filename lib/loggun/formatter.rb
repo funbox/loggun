@@ -8,30 +8,21 @@ module Loggun
     def call(severity, time, _program_name, message, loggun_type: nil)
       data = Hash.new(DEFAULT_VALUE)
       time = time.utc if config.force_utc
-      message = prepare_message(message)
+
+      process_message(data, message)
+
+      data[:type] = loggun_type || Loggun.type || DEFAULT_VALUE.dup
 
       data[:timestamp] = time.iso8601(config.timestamp_precision)
       data[:time] = data[:timestamp] if config.log_format == :plain
-      data[:pid] = Process.pid
-      data[:message] = message
+
       data[:severity] = severity&.to_s || 'INFO'
+      data[:pid] = Process.pid
       data[:tags_text] = tags_text
-      data[:type] = loggun_type || Loggun.type || DEFAULT_VALUE.dup
       data[:transaction_id] = Loggun.transaction_id
       data[:parent_transaction] = parent_transaction if parent_transaction
 
-      if data[:transaction_id] && data[:type] != DEFAULT_VALUE &&
-         data[:transaction_id].to_i != Process.pid
-        data[:type] = "#{data[:type]}##{data[:transaction_id]}"
-      end
-
-      if config.log_format == :json
-        data.except!(*config.exclude_keys) if config.only_keys.empty?
-        data.slice!(*config.only_keys) if config.only_keys.any?
-        JSON.generate(data) + "\n"
-      else
-        format(config.pattern + "\n", data)
-      end
+      prepare_to_output(data)
     end
 
     def tagged(*tags)
@@ -71,18 +62,38 @@ module Loggun
 
     private
 
-    def prepare_message(message)
+    def process_message(data, message)
       if message.is_a?(Hash)
         if config.parent_transaction_to_message && parent_transaction
           message[:parent_transaction] = parent_transaction
         end
-        message = format_message(message) if config.log_format == :plain
+
+        if config.log_format == :plain
+          message = format_message(message)
+        else
+          simple_message = message.delete(:message)
+          data[:metadata] = message if message != {}
+          message = simple_message
+        end
       end
 
-      if config.log_format == :plain
-        message.to_s.tr("\r\n", ' ').strip
+      message = message.to_s.tr("\r\n", ' ').strip if config.log_format == :plain
+
+      data[:message] = message
+    end
+
+    def prepare_to_output(data)
+      if data[:transaction_id] && data[:type] != DEFAULT_VALUE &&
+        data[:transaction_id].to_i != Process.pid
+        data[:type] = "#{data[:type]}##{data[:transaction_id]}"
+      end
+
+      if config.log_format == :json
+        data.except!(*config.exclude_keys) if config.only_keys.empty?
+        data.slice!(*config.only_keys) if config.only_keys.any?
+        JSON.generate(data) + "\n"
       else
-        message
+        format(config.pattern + "\n", data)
       end
     end
 

@@ -67,8 +67,8 @@ RSpec.describe Loggun::Formatter do
           Loggun::Config.instance.exclude_keys = %i[pid severity tags_text transaction_id]
         end
 
-        it 'returns correct string' do
-          expect(subject).to eq("{\"timestamp\":\"#{timestamp}\",\"message\":\"#{message}\",\"type\":\"-\"}\n")
+        it 'returns correct JSON string' do
+          expect(JSON.load(subject)).to eq(JSON.load("{\"timestamp\":\"#{timestamp}\",\"message\":\"#{message}\",\"type\":\"-\"}\n"))
         end
       end
 
