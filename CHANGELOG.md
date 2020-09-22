@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.0 - 2020-09-22
+* features
+  * Sidekiq client middlware for logging enqueued jobs
+
 ## 0.5.1 - 2020-09-22
 * fix
   * `message` string only in `log_format == :json` 
