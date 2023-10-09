@@ -1,17 +1,21 @@
 # Changelog
 
+## 0.7.0 - 2023-09-19
+* fixes
+  * Middleware Changes for Sidekiq 7.0
+
 ## 0.6.0 - 2020-09-22
 * features
   * Sidekiq client middlware for logging enqueued jobs
 
 ## 0.5.1 - 2020-09-22
 * fix
-  * `message` string only in `log_format == :json` 
+  * `message` string only in `log_format == :json`
 
 ## 0.5.0 - 2020-09-22
 * features
   * `config.log_format` - for control full log rows format
-  * `config.exclude_keys`, `config.include_keys` - for include or exclude keys from `:json` log_format 
+  * `config.exclude_keys`, `config.include_keys` - for include or exclude keys from `:json` log_format
 
 ## 0.4.1 - 2020-07-28
 * fixes
