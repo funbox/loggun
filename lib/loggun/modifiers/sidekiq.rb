@@ -8,8 +8,16 @@ module Loggun
       def apply
         return unless defined?(::Sidekiq) && ::Sidekiq::VERSION >= MIN_SIDEKIQ_V
 
-        ::Sidekiq.client_middleware do |chain|
-          chain.add ClientMiddleware
+        if ::Sidekiq::VERSION >= '7.0.0'
+          ::Sidekiq.configure_client do |config|
+            config.client_middleware do |chain|
+              chain.add ClientMiddleware
+            end
+          end
+        else
+          ::Sidekiq.client_middleware do |chain|
+            chain.add ClientMiddleware
+          end
         end
 
         ::Sidekiq.configure_server do |config|
